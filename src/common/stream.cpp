@@ -65,6 +65,10 @@ bool Stream::pastEOF() const {
 /* ReadStream */
 
 BufferView ReadStream::readByteView(size_t len) {
+	if (_pos > _size || len > _size - _pos) {
+		throw std::runtime_error("ReadStream::readByteView: Read past end of stream!");
+	}
+
 	BufferView res(_data + _pos, len);
 	_pos += len;
 	return res;
@@ -148,7 +152,7 @@ int32_t ReadStream::readInt32() {
 
 double ReadStream::readDouble() {
 	size_t p = _pos;
-	_pos += 4;
+	_pos += 8;
 	if (pastEOF()) {
 		throw std::runtime_error("ReadStream::readDouble: Read past end of stream!");
 	}

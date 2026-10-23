@@ -224,6 +224,11 @@ bool DirectorFile::readAfterburnerMap() {
 		info.len = compSize;
 		info.uncompressedLen = uncompSize;
 		info.offset = offset;
+		if (compressionType >= compressionIDs.size()) {
+			Common::warning(boost::format("readAfterburnerMap(): Resource %d has compression type %u but only %u types are defined")
+							% resId % compressionType % compressionTypeCount);
+			return false;
+		}
 		info.compressionID = compressionIDs[compressionType];
 		chunkInfo[resId] = info;
 

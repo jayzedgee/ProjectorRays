@@ -93,10 +93,15 @@ void CastListChunk::read(Common::ReadStream &stream) {
 		if (itemsPerCast >= 3)
 			entries[i].preloadSettings = readUint16(i * itemsPerCast + 3);
 		if (itemsPerCast >= 4) {
-			Common::ReadStream item(items[i * itemsPerCast + 4], itemEndianness);
-			entries[i].minMember = item.readUint16();
-			entries[i].maxMember = item.readUint16();
-			entries[i].id = item.readInt32();
+			size_t index = (size_t)i * itemsPerCast + 4;
+			if (index < offsetTableLen) {
+				Common::ReadStream item(items[index], itemEndianness);
+				entries[i].minMember = item.readUint16();
+				entries[i].maxMember = item.readUint16();
+				entries[i].id = item.readInt32();
+			} else {
+				Common::warning(boost::format("Cast list entry %d: item index %zu is out of range (%u items)!") % i % index % offsetTableLen);
+			}
 		}
 	}
 }

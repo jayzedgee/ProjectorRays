@@ -5,6 +5,7 @@
  */
 
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <vector>
@@ -22,7 +23,7 @@ namespace fs = std::filesystem;
 
 using namespace Director;
 
-bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
+static bool processFileImpl(fs::path input, IO::Options &options, bool outputIsDirectory) {
 	std::vector<uint8_t> buf;
 	if (!IO::readFile(input, buf)) {
 		Common::warning(boost::format("Could not read %s!") % input);
@@ -125,7 +126,16 @@ bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
 	return true;
 }
 
-int main(int argc, char *argv[]) {
+bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
+	try {
+		return processFileImpl(input, options, outputIsDirectory);
+	} catch (const std::exception &e) {
+		Common::warning(boost::format("Error processing %s: %s") % input % e.what());
+		return false;
+	}
+}
+
+static int run(int argc, char *argv[]) {
 	IO::Options options;
 	options.parse(argc, argv);
 	if (!options.valid()) {
@@ -179,4 +189,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	return EXIT_SUCCESS;
+}
+
+int main(int argc, char *argv[]) {
+	try {
+		return run(argc, argv);
+	} catch (const std::exception &e) {
+		Common::warning(std::string("Error: ") + e.what());
+		return EXIT_FAILURE;
+	} catch (...) {
+		Common::warning("Error: unknown exception");
+		return EXIT_FAILURE;
+	}
 }
